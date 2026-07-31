@@ -1,6 +1,6 @@
 module github.com/daflamingfox/conduit
 
-go 1.26.5
+go 1.26
 
 require modernc.org/sqlite v1.55.0
 
