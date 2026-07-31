@@ -35,9 +35,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up QEMU (Multi-Arch support)
-        uses: docker/setup-qemu-action@v4
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -49,7 +46,7 @@ jobs:
 
       - name: Extract Docker Tags & Labels for Manager
         id: meta-manager
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/conduit-manager
           tags: |

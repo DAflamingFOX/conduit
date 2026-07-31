@@ -1,7 +1,10 @@
-# Build Stage
-FROM golang:alpine AS builder
+# Build Stage (Runs NATIVELY on build platform using Go cross-compilation - 20x faster than QEMU)
+FROM --platform=$BUILDPLATFORM golang:alpine AS builder
 
+ARG TARGETOS
+ARG TARGETARCH
 ARG VERSION=dev
+
 ENV GOTOOLCHAIN=auto
 
 WORKDIR /app
@@ -13,8 +16,8 @@ RUN go mod download
 # Copy source code
 COPY . .
 
-# Build Manager binary with dynamic version ldflags
-RUN CGO_ENABLED=0 GOOS=linux go build \
+# Native Go cross-compilation for target OS and Architecture
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
     -ldflags "-s -w -X github.com/daflamingfox/conduit/internal/version.Version=${VERSION}" \
     -o /app/conduit-manager ./cmd/manager
 
