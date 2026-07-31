@@ -32,7 +32,7 @@ jobs:
         run: go vet ./...
 
   lint-ui:
-    name: Lint & Format UI with Prettier
+    name: TypeScript Check, ESLint & Prettier
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -52,6 +52,12 @@ jobs:
 
       - name: Install UI Dependencies
         run: cd ui && pnpm install
+
+      - name: Svelte TypeScript Diagnostics
+        run: cd ui && pnpm check
+
+      - name: ESLint Check
+        run: cd ui && pnpm lint
 
       - name: Prettier Format Check
         run: cd ui && pnpm format:check

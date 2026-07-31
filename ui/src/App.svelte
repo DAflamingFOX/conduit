@@ -1,8 +1,24 @@
 <script lang="ts">
+  interface NodeManifest {
+    id: string;
+    name: string;
+    category: string;
+    version: string;
+    execution?: {
+      binary?: string;
+    };
+  }
+
+  interface StoragePool {
+    path: string;
+    status: string;
+    latency: number;
+  }
+
   // Svelte 5 Runes
   let activeTab = $state<'nodes' | 'storage' | 'trigger' | 'logs'>('nodes');
-  let nodes = $state<any[]>([]);
-  let storagePools = $state<Record<string, any>>({});
+  let nodes = $state<NodeManifest[]>([]);
+  let storagePools = $state<Record<string, StoragePool>>({});
   let targetFilePath = $state('/tmp/sample.mp4');
   let triggerMessage = $state('');
   let logLines = $state<string[]>([
@@ -14,7 +30,7 @@
     try {
       const res = await fetch('/api/v1/nodes');
       if (res.ok) {
-        nodes = await res.json();
+        nodes = (await res.json()) as NodeManifest[];
         addLog(`[API] Loaded ${nodes.length} node manifests from Manager.`);
       }
     } catch (e) {
@@ -26,7 +42,7 @@
     try {
       const res = await fetch('/api/v1/storage');
       if (res.ok) {
-        storagePools = await res.json();
+        storagePools = (await res.json()) as Record<string, StoragePool>;
         addLog(`[API] Refreshed storage pool health probes.`);
       }
     } catch (e) {
@@ -34,7 +50,7 @@
     }
   }
 
-  async function handleTriggerJob(e: Event) {
+  async function handleTriggerJob(e: SubmitEvent) {
     e.preventDefault();
     triggerMessage = 'Submitting job...';
     try {
@@ -43,12 +59,12 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ file_path: targetFilePath }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as { job_id?: string; error?: string };
       if (res.ok) {
         triggerMessage = `[SUCCESS] Job Triggered! Job ID: ${data.job_id}`;
         addLog(`[JOB] Triggered execution for file: ${targetFilePath} (ID: ${data.job_id})`);
       } else {
-        triggerMessage = `[ERROR] ${data.error}`;
+        triggerMessage = `[ERROR] ${data.error ?? 'Unknown error'}`;
       }
     } catch (err) {
       triggerMessage = `[ERROR] ${err}`;
@@ -146,13 +162,13 @@
           </tr>
         </thead>
         <tbody>
-          {#each nodes as node}
+          {#each nodes as node (node.id)}
             <tr class="border-b border-slate-700 hover:bg-slate-750">
               <td class="p-2 font-bold text-slate-300 border-r border-slate-700">{node.id}</td>
               <td class="p-2 border-r border-slate-700">{node.name}</td>
               <td class="p-2 border-r border-slate-700 text-slate-400">{node.category}</td>
               <td class="p-2 border-r border-slate-700 text-slate-300 font-bold"
-                >{node.execution?.binary || 'internal'}</td
+                >{node.execution?.binary ?? 'internal'}</td
               >
               <td class="p-2 text-slate-400">{node.version}</td>
             </tr>
@@ -187,7 +203,7 @@
           </tr>
         </thead>
         <tbody>
-          {#each Object.entries(storagePools) as [alias, pool]}
+          {#each Object.entries(storagePools) as [alias, pool] (alias)}
             <tr class="border-b border-slate-700">
               <td class="p-2 font-bold border-r border-slate-700">{alias}</td>
               <td class="p-2 border-r border-slate-700 text-slate-300">{pool.path}</td>
@@ -237,7 +253,7 @@
       <div
         class="bg-slate-900 border border-slate-700 p-3 h-64 overflow-y-auto text-xs text-slate-300 space-y-1 font-mono"
       >
-        {#each logLines as line}
+        {#each logLines as line, i (i)}
           <div>{line}</div>
         {/each}
       </div>
