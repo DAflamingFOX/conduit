@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/daflamingfox/conduit/internal/logger"
 	"github.com/daflamingfox/conduit/internal/queue"
@@ -40,12 +41,33 @@ func main() {
 		taskQueue, err := queue.NewValkeyQueue(valkeyAddr)
 		if err != nil {
 			slog.Warn("could not connect to Valkey queue (operating in standalone mode)", "address", valkeyAddr, "error", err)
-		} else {
-			defer taskQueue.Close()
-			slog.Info("Worker registered with Valkey queue", "worker_id", caps.WorkerID)
+			select {} // Block forever in standalone mode
 		}
-	}
+		defer taskQueue.Close()
 
-	_ = context.Background()
-	slog.Info("Conduit Worker daemon ready and polling for tasks", "worker_id", caps.WorkerID)
+		slog.Info("Worker registered with Valkey queue", "worker_id", caps.WorkerID)
+		runner := worker.NewRunner(taskQueue)
+		slog.Info("Conduit Worker daemon ready and polling for tasks", "worker_id", caps.WorkerID)
+
+		// Active Worker Polling Loop
+		for {
+			step, err := taskQueue.PopStep(context.Background(), caps.WorkerID, 5*time.Second)
+			if err != nil {
+				slog.Error("error polling task queue", "error", err)
+				time.Sleep(2 * time.Second)
+				continue
+			}
+			if step == nil {
+				continue // No task available, continue polling
+			}
+
+			slog.Info("claimed task step", "step_id", step.StepID, "node_id", step.NodeInstanceID)
+			if err := runner.ExecuteStep(context.Background(), step); err != nil {
+				slog.Error("step execution failed", "step_id", step.StepID, "error", err)
+			}
+		}
+	} else {
+		slog.Info("Conduit Worker running in standalone mode (no Valkey address specified)", "worker_id", caps.WorkerID)
+		select {} // Block forever
+	}
 }
