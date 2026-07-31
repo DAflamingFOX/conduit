@@ -1,4 +1,4 @@
-# Build Stage (Runs NATIVELY on build platform using Go cross-compilation - 20x faster than QEMU)
+# Build Stage (Runs NATIVELY on build platform using Go cross-compilation)
 FROM --platform=$BUILDPLATFORM golang:alpine AS builder
 
 ARG TARGETOS
@@ -28,5 +28,6 @@ RUN apk add --no-cache ca-certificates tzdata ffmpeg imagemagick bash curl
 
 WORKDIR /app
 COPY --from=builder /app/conduit-worker .
+COPY nodes ./nodes
 
 CMD ["./conduit-worker"]

@@ -1,5 +1,15 @@
-# Build Stage (Runs NATIVELY on build platform using Go cross-compilation - 20x faster than QEMU)
-FROM --platform=$BUILDPLATFORM golang:alpine AS builder
+# Stage 1: Build Svelte 5 UI
+FROM node:22-alpine AS ui-builder
+
+WORKDIR /app/ui
+COPY ui/package.json ui/pnpm-lock.yaml ./
+RUN npx pnpm@10 install
+
+COPY ui ./
+RUN npx pnpm@10 build
+
+# Stage 2: Build Go Manager Binary
+FROM --platform=$BUILDPLATFORM golang:alpine AS go-builder
 
 ARG TARGETOS
 ARG TARGETARCH
@@ -13,7 +23,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code
+# Copy Go source code
 COPY . .
 
 # Native Go cross-compilation for target OS and Architecture
@@ -21,13 +31,15 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
     -ldflags "-s -w -X github.com/daflamingfox/conduit/internal/version.Version=${VERSION}" \
     -o /app/conduit-manager ./cmd/manager
 
-# Final Stage
+# Stage 3: Final Production Image
 FROM alpine:latest
 
 RUN apk add --no-cache ca-certificates tzdata
 
 WORKDIR /app
-COPY --from=builder /app/conduit-manager .
+COPY --from=go-builder /app/conduit-manager .
+COPY --from=ui-builder /app/ui/dist ./ui/dist
+COPY nodes ./nodes
 
 EXPOSE 5252
 
