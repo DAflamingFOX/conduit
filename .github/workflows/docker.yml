@@ -13,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version: '1.26'
           cache: true
@@ -31,18 +31,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Set up QEMU (Multi-Arch support)
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -53,8 +53,8 @@ jobs:
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/conduit-manager
           tags: |
-            # Always generated for every build (commit SHA and 'dev' tag)
-            type=sha,format=short
+            # Always generated for every build (commit short SHA and 'dev' tag)
+            type=sha,format=short,prefix=
             type=raw,value=dev
             # Additional tags for Git releases (version number and 'stable' tag)
             type=semver,pattern={{version}}
@@ -66,15 +66,15 @@ jobs:
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/conduit-worker
           tags: |
-            # Always generated for every build (commit SHA and 'dev' tag)
-            type=sha,format=short
+            # Always generated for every build (commit short SHA and 'dev' tag)
+            type=sha,format=short,prefix=
             type=raw,value=dev
             # Additional tags for Git releases (version number and 'stable' tag)
             type=semver,pattern={{version}}
             type=raw,value=stable,enable=${{ startsWith(github.ref, 'refs/tags/') }}
 
       - name: Build and Push Conduit Manager
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./docker/Dockerfile.manager
@@ -86,7 +86,7 @@ jobs:
           labels: ${{ steps.meta-manager.outputs.labels }}
 
       - name: Build and Push Conduit Worker
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./docker/Dockerfile.worker
