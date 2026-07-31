@@ -1,0 +1,30 @@
+# Build Stage
+FROM golang:1.24-alpine AS builder
+
+ARG VERSION=dev
+
+WORKDIR /app
+
+# Copy Go modules and dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build Manager binary with dynamic version ldflags
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -ldflags "-s -w -X github.com/daflamingfox/conduit/internal/version.Version=${VERSION}" \
+    -o /app/conduit-manager ./cmd/manager
+
+# Final Stage
+FROM alpine:latest
+
+RUN apk add --no-cache ca-certificates tzdata
+
+WORKDIR /app
+COPY --from=builder /app/conduit-manager .
+
+EXPOSE 5252
+
+CMD ["./conduit-manager"]

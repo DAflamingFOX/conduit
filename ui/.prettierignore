@@ -1,0 +1,5 @@
+# Ignore UI build artifacts
+dist/
+node_modules/
+.svelte-kit/
+pnpm-lock.yaml

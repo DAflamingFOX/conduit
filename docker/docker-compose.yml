@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  valkey:
+    image: valkey/valkey:8.0-alpine
+    container_name: conduit-valkey
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey_data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  manager:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.manager
+    container_name: conduit-manager
+    restart: unless-stopped
+    ports:
+      - "5252:5252"
+    environment:
+      - CONDUIT_DB_PATH=/data/conduit.db
+      - VALKEY_ADDR=valkey:6379
+    volumes:
+      - manager_data:/data
+    depends_on:
+      valkey:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.worker
+    container_name: conduit-worker-1
+    restart: unless-stopped
+    environment:
+      - MANAGER_ADDR=manager:5252
+      - VALKEY_ADDR=valkey:6379
+    depends_on:
+      - manager
+
+volumes:
+  valkey_data:
+  manager_data:

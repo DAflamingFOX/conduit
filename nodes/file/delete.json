@@ -1,0 +1,37 @@
+{
+  // Conduit Core File Delete Node
+  "id": "conduit.file.delete",
+  "name": "Delete File",
+  "category": "File Operations",
+  "version": "1.0.0",
+  "description": "Deletes the current working or target file permanently.",
+  "inputs": [
+    {
+      "id": "file",
+      "type": "file",
+      "label": "Input File",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "success",
+      "type": "file",
+      "label": "On Success"
+    },
+    {
+      "id": "error",
+      "type": "error",
+      "label": "On Error"
+    }
+  ],
+  "parameters": [],
+  "execution": {
+    "type": "command",
+    "binary": "rm",
+    "args": [
+      "-f",
+      "{{ inputs.file.path }}"
+    ]
+  }
+}

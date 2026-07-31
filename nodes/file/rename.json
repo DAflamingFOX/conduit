@@ -1,0 +1,45 @@
+{
+  // Conduit Core File Rename Node
+  "id": "conduit.file.rename",
+  "name": "Rename File",
+  "category": "File Operations",
+  "version": "1.0.0",
+  "description": "Renames a file using a destination template pattern.",
+  "inputs": [
+    {
+      "id": "file",
+      "type": "file",
+      "label": "Input File",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "success",
+      "type": "file",
+      "label": "Renamed File"
+    },
+    {
+      "id": "error",
+      "type": "error",
+      "label": "On Error"
+    }
+  ],
+  "parameters": [
+    {
+      "id": "new_name",
+      "label": "New File Name",
+      "type": "text",
+      "description": "New file name including extension.",
+      "default": "processed_{{ inputs.file.name }}"
+    }
+  ],
+  "execution": {
+    "type": "command",
+    "binary": "mv",
+    "args": [
+      "{{ inputs.file.path }}",
+      "{{ working_dir }}/{{ parameters.new_name }}"
+    ]
+  }
+}

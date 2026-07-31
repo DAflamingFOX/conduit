@@ -1,0 +1,25 @@
+# Binary outputs
+conduit-manager
+conduit-worker
+bin/
+
+# Databases & Temporary Files
+*.db
+*.db-wal
+*.db-shm
+*.tmp
+*.log
+
+# Node / UI build artifacts
+node_modules/
+ui/node_modules/
+ui/dist/
+ui/.svelte-kit/
+
+# Environment / IDE / OS
+.env
+.env*.local
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

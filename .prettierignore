@@ -1,0 +1,9 @@
+# Ignore build outputs & dependencies
+node_modules/
+dist/
+ui/dist/
+.svelte-kit/
+conduit.db*
+bin/
+ui/node_modules/
+pnpm-lock.yaml

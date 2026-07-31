@@ -1,0 +1,46 @@
+{
+  // Conduit Core File Copy Node
+  "id": "conduit.file.copy",
+  "name": "Copy File",
+  "category": "File Operations",
+  "version": "1.0.0",
+  "description": "Copies the current target file to a specified destination directory.",
+  "inputs": [
+    {
+      "id": "file",
+      "type": "file",
+      "label": "Input File",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "success",
+      "type": "file",
+      "label": "Copied File"
+    },
+    {
+      "id": "error",
+      "type": "error",
+      "label": "On Error"
+    }
+  ],
+  "parameters": [
+    {
+      "id": "destination",
+      "label": "Destination Directory",
+      "type": "text",
+      "description": "Target folder path where file will be copied.",
+      "default": "/storage/backup"
+    }
+  ],
+  "execution": {
+    "type": "command",
+    "binary": "cp",
+    "args": [
+      "-f",
+      "{{ inputs.file.path }}",
+      "{{ parameters.destination }}"
+    ]
+  }
+}

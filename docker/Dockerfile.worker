@@ -1,0 +1,28 @@
+# Build Stage
+FROM golang:1.24-alpine AS builder
+
+ARG VERSION=dev
+
+WORKDIR /app
+
+# Copy Go modules and dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build Worker binary with dynamic version ldflags
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -ldflags "-s -w -X github.com/daflamingfox/conduit/internal/version.Version=${VERSION}" \
+    -o /app/conduit-worker ./cmd/worker
+
+# Final Stage (Includes FFmpeg and media tools)
+FROM alpine:latest
+
+RUN apk add --no-cache ca-certificates tzdata ffmpeg imagemagick bash curl
+
+WORKDIR /app
+COPY --from=builder /app/conduit-worker .
+
+CMD ["./conduit-worker"]

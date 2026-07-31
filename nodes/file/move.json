@@ -1,0 +1,45 @@
+{
+  // Conduit Core File Move Node
+  "id": "conduit.file.move",
+  "name": "Move File",
+  "category": "File Operations",
+  "version": "1.0.0",
+  "description": "Moves the current target file to a specified destination directory.",
+  "inputs": [
+    {
+      "id": "file",
+      "type": "file",
+      "label": "Input File",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "id": "success",
+      "type": "file",
+      "label": "Moved File"
+    },
+    {
+      "id": "error",
+      "type": "error",
+      "label": "On Error"
+    }
+  ],
+  "parameters": [
+    {
+      "id": "destination",
+      "label": "Destination Directory",
+      "type": "text",
+      "description": "Target folder path where file will be moved.",
+      "default": "/storage/output"
+    }
+  ],
+  "execution": {
+    "type": "command",
+    "binary": "mv",
+    "args": [
+      "{{ inputs.file.path }}",
+      "{{ parameters.destination }}"
+    ]
+  }
+}
